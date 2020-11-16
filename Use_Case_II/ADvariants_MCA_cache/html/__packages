@@ -1,0 +1,17 @@
+base
+FactoMineR
+ggplot2
+factoextra
+tidyverse
+tibble
+tidyr
+readr
+purrr
+dplyr
+stringr
+forcats
+vcd
+lattice
+pins
+synapser
+data.table

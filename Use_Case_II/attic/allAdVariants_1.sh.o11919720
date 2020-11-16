@@ -1,0 +1,16 @@
+
+
+--------------------------------------------------------------------------------
+|  JAX TORQUE EPILOGUE
+|
+|  Job ID: 11919720.helix-master
+|  Exit Status: 0
+|  Requested Resources:
+|      mem=8gb,nodes=1:ppn=1,walltime=24:00:00
+|  Resources Consumed:
+|      cput=00:19:05,mem=8420kb,vmem=247560kb,walltime=00:19:11
+|  Walltime accuracy: 1.3%
+|
+| Epilogue Host (TORQUE Mother Superior): helix063
+|
+--------------------------------------------------------------------------------

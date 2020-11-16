@@ -1,0 +1,33 @@
+#PBS -t 2-30
+#PBS -N getGenotypes
+#PBS -l nodes=1:ppn=1,mem=48gb,walltime=24:00:00
+#PBS -M annat.haber@jax.org
+#PBS -m abe
+#PBS -j oe
+
+cd ${PBS_O_WORKDIR} 
+
+InPath=/sdata/carter-lab/carter/AMPAD/WGS_PrelimProcessing/output/Joint/MAF05
+
+variant=$(head -n $PBS_ARRAYID ADvariants_anno.txt | tail -n 1)
+rsID=$(cut -f1 -d' ' <<<$variant)
+CHROM=$(cut -f2 -d' ' <<<$variant)
+POS=$(cut -f3 -d' ' <<<$variant)
+((POSS=$POS + 1))
+inputvcf=NIA_JG_1898_samples_GRM_WGS_b37_JointAnalysis01_2017-12-08_$CHROM.recalibrated_variants.vcf.gz
+output=ADvariants_genotypes_$rsID
+
+/opt/software/helix/vcftools/0.1.12a/bin/vcftools \
+--gzvcf $InPath/$inputvcf \
+--chr $CHROM \
+--from-bp $POS \
+--to-bp $POSS \
+--recode --recode-INFO-all \
+--out $output
+
+
+ /opt/software/helix/bcftools/1.3.1/bin/bcftools query \
+ -f '[%CHROM\t%POS\t%REF\t%ALT\t%SAMPLE\t%GT\n]' \
+ $output.recode.vcf > $output.txt
+ 
+ rm *.vcfs
