@@ -6,6 +6,7 @@ output:
   html_document:
     toc: true
     code_folding: hide
+    keep_md: true
 ---
 
 
@@ -561,28 +562,54 @@ rm(ca.df)
 
 
 # Output
+Save objects to local folder:
 ```{r}
 saveRDS(genotypes, "output/ADvariants_genotypes_all.RDS")
 write_csv(genotypes, "output/ADvariants_genotypes_all.csv")
 write_csv(apoe, "output/APOE_all.csv")
 ```
+
+Update output files on Synapse in folder syn23569714:  
+The files already exist on Synapse (uploaded manually), therefore here I use dataFileHandleId to specify their synID and tell the function to update them instead of uploading as new.  
+Provenance for results files is specified as executed="syn23569718", which is the html report rendered from this Rmd file.  
+Provenance for the html report specifies all the entities that go as input for this analysis (see above) as well as the ADvariants_anno.pbs script used above (uploaded manually).
+```{r, eval=FALSE}
+invisible(synLogin())
+
+file <- File("ADvariants_MCA.html",
+             contentType = "text/html",
+             description = "Analysis report",
+             parent = "syn23569714",
+             dataFileHandleId = "syn23569718")
+prov <- Activity(used = c('syn11707420', 'syn11384571', 'syn11384608', 'syn3382527', 'syn3191087', 'syn23569719'))
+file <- synStore(file, activity=prov)
+
+file <- File("output/ADvariants_anno.txt",
+             contentType = "text/plain",
+             description = "LOAD variant list",
+             parent = "syn23569714",
+             dataFileHandleId = "syn23569715")
+prov <- Activity(executed = "syn23569718")
+file <- synStore(file, activity=prov)
+
+file <- File("output/ADvariants_genotypes_all.csv", 
+             contentType = "text/csv",
+             description = "LOAD variants all genotypes",
+             parent = "syn23569714",
+             dataFileHandleId = "syn23569716")
+prov <- Activity(executed = "syn23569718")
+file <- synStore(file, activity=prov)
+
+file <- File("output/ADvariants_genotypes_all.csv", 
+             contentType = "text/csv",
+             description = "APOE all genotypes",
+             parent = "syn23569714",
+             dataFileHandleId = "syn23569717")
+prov <- Activity(executed = "syn23569718")
+file <- synStore(file, activity=prov)
+```
+
 # Session info
 ```{r session-info}
 devtools::session_info()
-```
-
-```{r, include=FALSE, eval=FALSE}
-project <- "syn7419026"
-# attachment
-filePath <- "output/"
-connection <- file(filePath)
-writeChar("this is the content of the file", connection, eos = NULL)
-close(connection)
-
-wiki <- Wiki(owner = project,
-             title = "Variants genotype correspondence",
-             markdownFile = "ADvariants_MCA.Rmd",
-             attachments = list(filePath))
-wiki <- synStore(wiki)
-
 ```
