@@ -1,7 +1,7 @@
 ---
 title: "Genotype correspondence among AD-related variants in AMP-AD cohorts"
 author: "Annat Haber"
-date: '2020-11-23'
+date: '2021-01-07'
 output:
   html_document:
     toc: true
@@ -103,10 +103,15 @@ anno.all %>%
 ```
 
 # Get genotypes
-The second step extracts the genotypes in all the AD loci for all samples from the WGS vcf files. This is done on hpc with script [ADvariants_getGenotypes.pbs](scripts/ADvariants_getGenotypes.pbs) 
+The second step extracts the genotypes in all the AD loci for all samples from the WGS vcf files. This is done on hpc.
 
-# Recoding genotypes
-This step recodes the genotype information extracted from the vcf files: 0, homozygote for the reference allele; 1, heterozygote; 2, homozygote for the alternative allele. For APOE it combines the two variants. These codes are treated as categorical below. The final genotype matrix is exported as [ADvariants_genotypes_all.csv](output/ADvariants_genotypes_all.csv) (see output section below).
+
+```bash
+qsub scripts/ADvariants_getGenotypes.pbs
+```
+
+# Re-coding genotypes
+This step re-codes the genotype information extracted from the vcf files: 0, homozygote for the reference allele; 1, heterozygote; 2, homozygote for the alternative allele. For APOE it combines the two variants. These codes are treated as categorical below. The final genotype matrix is exported as [ADvariants_genotypes_all.csv](output/ADvariants_genotypes_all.csv) (see output section below).
 
 
 ```r
@@ -623,18 +628,17 @@ write_csv(apoe, "output/APOE_all.csv")
 
 Update output files on Synapse in folder syn23569714:  
 The files already exist on Synapse (uploaded manually), therefore here I use dataFileHandleId to specify their synID and tell the function to update them instead of uploading as new.  
-Provenance for results files is specified as executed="syn23569718", which is the html report rendered from this Rmd file.  
-Provenance for the html report specifies all the entities that go as input for this analysis (see above) as well as the ADvariants_anno.pbs script used above (uploaded manually).
+Provenance for output files is specified as executed="syn23595214", which is this Rmd file.  
+Provenance for the Rmd specifies all the entities that go as input for this analysis (see above) as well as the ADvariants_anno.pbs script used above (uploaded manually).
 
 ```r
 invisible(synLogin())
 
-file <- File("ADvariants_MCA.html",
-             contentType = "text/html",
-             description = "Analysis report",
+file <- File("ADvariants_MCA.Rmd",
+             description = "Analysis script",
              parent = "syn23569714",
-             dataFileHandleId = "syn23569718")
-prov <- Activity(used = c('syn11707420', 'syn11384571', 'syn11384608', 'syn3382527', 'syn3191087', 'syn23569719'))
+             dataFileHandleId = "syn23595214")
+prov <- Activity(used = c('syn11707420', 'syn11384571', 'syn11384608', 'syn3382527', 'syn3191087'))
 file <- synStore(file, activity=prov)
 
 file <- File("output/ADvariants_anno.txt",
@@ -642,7 +646,7 @@ file <- File("output/ADvariants_anno.txt",
              description = "LOAD variant list",
              parent = "syn23569714",
              dataFileHandleId = "syn23569715")
-prov <- Activity(executed = "syn23569718")
+prov <- Activity(executed = "syn23595214")
 file <- synStore(file, activity=prov)
 
 file <- File("output/ADvariants_genotypes_all.csv", 
@@ -650,15 +654,15 @@ file <- File("output/ADvariants_genotypes_all.csv",
              description = "LOAD variants all genotypes",
              parent = "syn23569714",
              dataFileHandleId = "syn23569716")
-prov <- Activity(executed = "syn23569718")
+prov <- Activity(executed = c("syn23595214", "syn23569719"))
 file <- synStore(file, activity=prov)
 
-file <- File("output/ADvariants_genotypes_all.csv", 
+file <- File("output/APOE_all.csv", 
              contentType = "text/csv",
              description = "APOE all genotypes",
              parent = "syn23569714",
              dataFileHandleId = "syn23569717")
-prov <- Activity(executed = "syn23569718")
+prov <- Activity(executed = c("syn23595214", "syn23569719"))
 file <- synStore(file, activity=prov)
 ```
 
@@ -671,107 +675,106 @@ devtools::session_info()
 ```
 ## ─ Session info ───────────────────────────────────────────────────────────────
 ##  setting  value                       
-##  version  R version 3.6.1 (2019-07-05)
-##  os       CentOS Linux 7 (Core)       
-##  system   x86_64, linux-gnu           
+##  version  R version 3.6.2 (2019-12-12)
+##  os       macOS Mojave 10.14.6        
+##  system   x86_64, darwin15.6.0        
 ##  ui       X11                         
 ##  language (EN)                        
 ##  collate  en_US.UTF-8                 
 ##  ctype    en_US.UTF-8                 
 ##  tz       America/New_York            
-##  date     2020-11-23                  
+##  date     2020-12-04                  
 ## 
 ## ─ Packages ───────────────────────────────────────────────────────────────────
 ##  package        * version  date       lib source        
-##  assertthat       0.2.1    2019-03-21 [2] CRAN (R 3.6.1)
-##  backports        1.1.7    2020-05-13 [2] CRAN (R 3.6.1)
-##  blob             1.2.1    2020-01-20 [1] CRAN (R 3.6.1)
-##  broom            0.7.2    2020-10-20 [1] CRAN (R 3.6.1)
-##  callr            3.5.1    2020-10-13 [1] CRAN (R 3.6.1)
-##  cellranger       1.1.0    2016-07-27 [1] CRAN (R 3.6.1)
-##  cli              2.0.2    2020-02-28 [2] CRAN (R 3.6.1)
-##  cluster          2.1.0    2019-06-19 [2] CRAN (R 3.6.1)
-##  codetools        0.2-16   2018-12-24 [2] CRAN (R 3.6.1)
-##  colorspace       1.4-1    2019-03-18 [2] CRAN (R 3.6.1)
-##  crayon           1.3.4    2017-09-16 [2] CRAN (R 3.6.1)
-##  data.table     * 1.13.2   2020-10-19 [1] CRAN (R 3.6.0)
-##  DBI              1.1.0    2019-12-15 [1] CRAN (R 3.6.1)
-##  dbplyr           1.4.4    2020-05-27 [1] CRAN (R 3.6.1)
-##  desc             1.2.0    2018-05-01 [2] CRAN (R 3.6.1)
-##  devtools         2.3.2    2020-09-18 [1] CRAN (R 3.6.1)
-##  digest           0.6.25   2020-02-23 [2] CRAN (R 3.6.1)
-##  dplyr          * 1.0.2    2020-08-18 [1] CRAN (R 3.6.1)
-##  ellipsis         0.3.1    2020-05-15 [2] CRAN (R 3.6.1)
-##  evaluate         0.14     2019-05-28 [2] CRAN (R 3.6.1)
-##  factoextra     * 1.0.7    2020-04-01 [1] CRAN (R 3.6.1)
-##  FactoMineR     * 2.3      2020-02-29 [1] CRAN (R 3.6.1)
-##  fansi            0.4.1    2020-01-08 [2] CRAN (R 3.6.1)
+##  assertthat       0.2.1    2019-03-21 [1] CRAN (R 3.6.0)
+##  backports        1.1.8    2020-06-17 [1] CRAN (R 3.6.2)
+##  blob             1.2.1    2020-01-20 [1] CRAN (R 3.6.0)
+##  broom            0.7.0    2020-07-09 [1] CRAN (R 3.6.2)
+##  callr            3.4.3    2020-03-28 [1] CRAN (R 3.6.2)
+##  cellranger       1.1.0    2016-07-27 [1] CRAN (R 3.6.0)
+##  cli              2.0.2    2020-02-28 [1] CRAN (R 3.6.0)
+##  cluster          2.1.0    2019-06-19 [1] CRAN (R 3.6.2)
+##  codetools        0.2-16   2018-12-24 [1] CRAN (R 3.6.2)
+##  colorspace       1.4-1    2019-03-18 [1] CRAN (R 3.6.0)
+##  crayon           1.3.4    2017-09-16 [1] CRAN (R 3.6.0)
+##  data.table     * 1.13.0   2020-07-24 [1] CRAN (R 3.6.2)
+##  DBI              1.1.0    2019-12-15 [1] CRAN (R 3.6.0)
+##  dbplyr           1.4.4    2020-05-27 [1] CRAN (R 3.6.2)
+##  desc             1.2.0    2018-05-01 [1] CRAN (R 3.6.0)
+##  devtools         2.3.1    2020-07-21 [1] CRAN (R 3.6.2)
+##  digest           0.6.25   2020-02-23 [1] CRAN (R 3.6.0)
+##  dplyr          * 1.0.1    2020-07-31 [1] CRAN (R 3.6.2)
+##  ellipsis         0.3.1    2020-05-15 [1] CRAN (R 3.6.2)
+##  evaluate         0.14     2019-05-28 [1] CRAN (R 3.6.0)
+##  factoextra     * 1.0.7    2020-04-01 [1] CRAN (R 3.6.2)
+##  FactoMineR     * 2.3      2020-02-29 [1] CRAN (R 3.6.0)
+##  fansi            0.4.1    2020-01-08 [1] CRAN (R 3.6.0)
 ##  flashClust       1.01-2   2012-08-21 [1] CRAN (R 3.6.0)
-##  forcats        * 0.5.0    2020-03-01 [1] CRAN (R 3.6.1)
-##  fs               1.5.0    2020-07-31 [1] CRAN (R 3.6.1)
-##  generics         0.0.2    2018-11-29 [1] CRAN (R 3.6.1)
-##  ggplot2        * 3.3.2    2020-06-19 [1] CRAN (R 3.6.0)
+##  forcats        * 0.5.0    2020-03-01 [1] CRAN (R 3.6.0)
+##  fs               1.5.0    2020-07-31 [1] CRAN (R 3.6.2)
+##  generics         0.0.2    2018-11-29 [1] CRAN (R 3.6.0)
+##  ggplot2        * 3.3.2    2020-06-19 [1] CRAN (R 3.6.2)
 ##  ggrepel          0.8.2    2020-03-08 [1] CRAN (R 3.6.0)
-##  glue             1.4.1    2020-05-13 [2] CRAN (R 3.6.1)
-##  gtable           0.3.0    2019-03-25 [2] CRAN (R 3.6.1)
-##  haven            2.3.1    2020-06-01 [1] CRAN (R 3.6.1)
-##  hms              0.5.3    2020-01-08 [1] CRAN (R 3.6.1)
-##  htmltools        0.5.0    2020-06-16 [1] CRAN (R 3.6.1)
-##  httr             1.4.2    2020-07-20 [1] CRAN (R 3.6.1)
-##  jsonlite         1.7.1    2020-09-07 [1] CRAN (R 3.6.1)
-##  knitr            1.30     2020-09-22 [1] CRAN (R 3.6.1)
-##  lattice        * 0.20-38  2018-11-04 [2] CRAN (R 3.6.1)
+##  glue             1.4.1    2020-05-13 [1] CRAN (R 3.6.2)
+##  gtable           0.3.0    2019-03-25 [1] CRAN (R 3.6.0)
+##  haven            2.3.1    2020-06-01 [1] CRAN (R 3.6.2)
+##  hms              0.5.3    2020-01-08 [1] CRAN (R 3.6.0)
+##  htmltools        0.5.0    2020-06-16 [1] CRAN (R 3.6.2)
+##  httr             1.4.2    2020-07-20 [1] CRAN (R 3.6.2)
+##  jsonlite         1.7.0    2020-06-25 [1] CRAN (R 3.6.2)
+##  knitr            1.29     2020-06-23 [1] CRAN (R 3.6.2)
+##  lattice        * 0.20-41  2020-04-02 [1] CRAN (R 3.6.2)
 ##  leaps            3.1      2020-01-16 [1] CRAN (R 3.6.0)
 ##  lifecycle        0.2.0    2020-03-06 [1] CRAN (R 3.6.0)
-##  lmtest           0.9-38   2020-09-09 [1] CRAN (R 3.6.0)
-##  lubridate        1.7.9    2020-06-08 [1] CRAN (R 3.6.1)
-##  magrittr         1.5      2014-11-22 [2] CRAN (R 3.6.1)
-##  MASS             7.3-51.4 2019-03-31 [2] CRAN (R 3.6.1)
-##  memoise          1.1.0    2017-04-21 [1] CRAN (R 3.6.1)
-##  modelr           0.1.8    2020-05-19 [1] CRAN (R 3.6.1)
-##  munsell          0.5.0    2018-06-12 [2] CRAN (R 3.6.1)
-##  pack             0.1-1    2020-10-16 [1] local         
-##  pillar           1.4.4    2020-05-05 [2] CRAN (R 3.6.1)
-##  pins           * 0.4.3    2020-07-10 [1] CRAN (R 3.6.0)
-##  pkgbuild         1.1.0    2020-07-13 [1] CRAN (R 3.6.1)
-##  pkgconfig        2.0.3    2019-09-22 [2] CRAN (R 3.6.1)
-##  pkgload          1.1.0    2020-05-29 [2] CRAN (R 3.6.1)
-##  prettyunits      1.1.1    2020-01-24 [2] CRAN (R 3.6.1)
-##  processx         3.4.4    2020-09-03 [1] CRAN (R 3.6.1)
-##  ps               1.3.3    2020-05-08 [2] CRAN (R 3.6.1)
-##  purrr          * 0.3.4    2020-04-17 [1] CRAN (R 3.6.1)
-##  PythonEmbedInR   0.5.73   2020-10-16 [1] local         
-##  R6               2.4.1    2019-11-12 [2] CRAN (R 3.6.1)
-##  Rcpp             1.0.5    2020-07-06 [1] CRAN (R 3.6.0)
-##  readr          * 1.4.0    2020-10-05 [1] CRAN (R 3.6.1)
-##  readxl           1.3.1    2019-03-13 [1] CRAN (R 3.6.1)
-##  remotes          2.2.0    2020-07-21 [1] CRAN (R 3.6.1)
-##  reprex           0.3.0    2019-05-16 [1] CRAN (R 3.6.1)
-##  rlang            0.4.8    2020-10-08 [1] CRAN (R 3.6.0)
-##  rmarkdown        2.5      2020-10-21 [1] CRAN (R 3.6.1)
-##  rprojroot        1.3-2    2018-01-03 [2] CRAN (R 3.6.1)
+##  lmtest           0.9-37   2019-04-30 [1] CRAN (R 3.6.0)
+##  lubridate        1.7.9    2020-06-08 [1] CRAN (R 3.6.2)
+##  magrittr         1.5      2014-11-22 [1] CRAN (R 3.6.0)
+##  MASS             7.3-51.6 2020-04-26 [1] CRAN (R 3.6.2)
+##  memoise          1.1.0    2017-04-21 [1] CRAN (R 3.6.0)
+##  modelr           0.1.8    2020-05-19 [1] CRAN (R 3.6.2)
+##  munsell          0.5.0    2018-06-12 [1] CRAN (R 3.6.0)
+##  pack             0.1-1    2019-04-26 [1] local         
+##  pillar           1.4.6    2020-07-10 [1] CRAN (R 3.6.2)
+##  pins           * 0.4.3    2020-07-10 [1] CRAN (R 3.6.2)
+##  pkgbuild         1.1.0    2020-07-13 [1] CRAN (R 3.6.2)
+##  pkgconfig        2.0.3    2019-09-22 [1] CRAN (R 3.6.0)
+##  pkgload          1.1.0    2020-05-29 [1] CRAN (R 3.6.2)
+##  prettyunits      1.1.1    2020-01-24 [1] CRAN (R 3.6.0)
+##  processx         3.4.3    2020-07-05 [1] CRAN (R 3.6.2)
+##  ps               1.3.3    2020-05-08 [1] CRAN (R 3.6.2)
+##  purrr          * 0.3.4    2020-04-17 [1] CRAN (R 3.6.2)
+##  PythonEmbedInR   0.5.73   2020-09-16 [1] local         
+##  R6               2.4.1    2019-11-12 [1] CRAN (R 3.6.0)
+##  Rcpp             1.0.5    2020-07-06 [1] CRAN (R 3.6.2)
+##  readr          * 1.3.1    2018-12-21 [1] CRAN (R 3.6.0)
+##  readxl           1.3.1    2019-03-13 [1] CRAN (R 3.6.0)
+##  remotes          2.2.0    2020-07-21 [1] CRAN (R 3.6.2)
+##  reprex           0.3.0    2019-05-16 [1] CRAN (R 3.6.0)
+##  rlang            0.4.7    2020-07-09 [1] CRAN (R 3.6.2)
+##  rmarkdown        2.3      2020-06-18 [1] CRAN (R 3.6.2)
+##  rprojroot        1.3-2    2018-01-03 [1] CRAN (R 3.6.0)
 ##  rstudioapi       0.11     2020-02-07 [1] CRAN (R 3.6.0)
-##  rvest            0.3.6    2020-07-25 [1] CRAN (R 3.6.1)
-##  scales           1.1.1    2020-05-11 [1] CRAN (R 3.6.0)
+##  rvest            0.3.6    2020-07-25 [1] CRAN (R 3.6.2)
+##  scales           1.1.1    2020-05-11 [1] CRAN (R 3.6.2)
 ##  scatterplot3d    0.3-41   2018-03-14 [1] CRAN (R 3.6.0)
-##  sessioninfo      1.1.1    2018-11-05 [1] CRAN (R 3.6.1)
-##  stringi          1.5.3    2020-09-09 [1] CRAN (R 3.6.1)
-##  stringr        * 1.4.0    2019-02-10 [1] CRAN (R 3.6.1)
-##  synapser       * 0.8.71   2020-10-16 [1] local         
+##  sessioninfo      1.1.1    2018-11-05 [1] CRAN (R 3.6.0)
+##  stringi          1.4.6    2020-02-17 [1] CRAN (R 3.6.0)
+##  stringr        * 1.4.0    2019-02-10 [1] CRAN (R 3.6.0)
+##  synapser       * 0.8.71   2020-09-16 [1] local         
 ##  testthat         2.3.2    2020-03-02 [1] CRAN (R 3.6.0)
-##  tibble         * 3.0.1    2020-04-20 [2] CRAN (R 3.6.1)
-##  tidyr          * 1.1.2    2020-08-27 [1] CRAN (R 3.6.1)
-##  tidyselect       1.1.0    2020-05-11 [1] CRAN (R 3.6.1)
-##  tidyverse      * 1.3.0    2019-11-21 [1] CRAN (R 3.6.1)
-##  usethis          1.6.3    2020-09-17 [1] CRAN (R 3.6.1)
-##  vcd            * 1.4-8    2020-09-21 [1] CRAN (R 3.6.0)
-##  vctrs            0.3.4    2020-08-29 [1] CRAN (R 3.6.1)
-##  withr            2.2.0    2020-04-20 [2] CRAN (R 3.6.1)
-##  xfun             0.18     2020-09-29 [1] CRAN (R 3.6.1)
-##  xml2             1.3.2    2020-04-23 [1] CRAN (R 3.6.1)
-##  yaml             2.2.1    2020-02-01 [1] CRAN (R 3.6.1)
-##  zoo              1.8-8    2020-05-02 [1] CRAN (R 3.6.0)
+##  tibble         * 3.0.3    2020-07-10 [1] CRAN (R 3.6.2)
+##  tidyr          * 1.1.1    2020-07-31 [1] CRAN (R 3.6.2)
+##  tidyselect       1.1.0    2020-05-11 [1] CRAN (R 3.6.2)
+##  tidyverse      * 1.3.0    2019-11-21 [1] CRAN (R 3.6.0)
+##  usethis          1.6.1    2020-04-29 [1] CRAN (R 3.6.2)
+##  vcd            * 1.4-7    2020-04-02 [1] CRAN (R 3.6.2)
+##  vctrs            0.3.2    2020-07-15 [1] CRAN (R 3.6.2)
+##  withr            2.2.0    2020-04-20 [1] CRAN (R 3.6.2)
+##  xfun             0.16     2020-07-24 [1] CRAN (R 3.6.2)
+##  xml2             1.3.2    2020-04-23 [1] CRAN (R 3.6.2)
+##  yaml             2.2.1    2020-02-01 [1] CRAN (R 3.6.0)
+##  zoo              1.8-8    2020-05-02 [1] CRAN (R 3.6.2)
 ## 
-## [1] /home/habera/R/x86_64-pc-linux-gnu-library/3.6
-## [2] /local/R/3.6.1/lib64/R/library
+## [1] /Library/Frameworks/R.framework/Versions/3.6/Resources/library
 ```

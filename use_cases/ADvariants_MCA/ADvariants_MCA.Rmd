@@ -102,10 +102,14 @@ anno.all %>%
 ```
 
 # Get genotypes
-The second step extracts the genotypes in all the AD loci for all samples from the WGS vcf files. This is done on hpc with script [ADvariants_getGenotypes.pbs](scripts/ADvariants_getGenotypes.pbs) 
+The second step extracts the genotypes in all the AD loci for all samples from the WGS vcf files. This is done on hpc.
 
-# Recoding genotypes
-This step recodes the genotype information extracted from the vcf files: 0, homozygote for the reference allele; 1, heterozygote; 2, homozygote for the alternative allele. For APOE it combines the two variants. These codes are treated as categorical below. The final genotype matrix is exported as [ADvariants_genotypes_all.csv](output/ADvariants_genotypes_all.csv) (see output section below).
+```{bash, eval=FALSE}
+qsub scripts/ADvariants_getGenotypes.pbs
+```
+
+# Re-coding genotypes
+This step re-codes the genotype information extracted from the vcf files: 0, homozygote for the reference allele; 1, heterozygote; 2, homozygote for the alternative allele. For APOE it combines the two variants. These codes are treated as categorical below. The final genotype matrix is exported as [ADvariants_genotypes_all.csv](output/ADvariants_genotypes_all.csv) (see output section below).
 
 ```{r recoding}
 gtfiles <- list.files(path="output/", pattern="ADvariants_genotypes_rs")
@@ -563,7 +567,7 @@ rm(ca.df)
 
 # Output
 Save objects to local folder:
-```{r}
+```{r output}
 saveRDS(genotypes, "output/ADvariants_genotypes_all.RDS")
 write_csv(genotypes, "output/ADvariants_genotypes_all.csv")
 write_csv(apoe, "output/APOE_all.csv")
@@ -571,17 +575,16 @@ write_csv(apoe, "output/APOE_all.csv")
 
 Update output files on Synapse in folder syn23569714:  
 The files already exist on Synapse (uploaded manually), therefore here I use dataFileHandleId to specify their synID and tell the function to update them instead of uploading as new.  
-Provenance for results files is specified as executed="syn23569718", which is the html report rendered from this Rmd file.  
-Provenance for the html report specifies all the entities that go as input for this analysis (see above) as well as the ADvariants_anno.pbs script used above (uploaded manually).
-```{r, eval=FALSE}
+Provenance for output files is specified as executed="syn23595214", which is this Rmd file.  
+Provenance for the Rmd specifies all the entities that go as input for this analysis (see above) as well as the ADvariants_anno.pbs script used above (uploaded manually).
+```{r syn_output, eval=FALSE}
 invisible(synLogin())
 
-file <- File("ADvariants_MCA.html",
-             contentType = "text/html",
-             description = "Analysis report",
+file <- File("ADvariants_MCA.Rmd",
+             description = "Analysis script",
              parent = "syn23569714",
-             dataFileHandleId = "syn23569718")
-prov <- Activity(used = c('syn11707420', 'syn11384571', 'syn11384608', 'syn3382527', 'syn3191087', 'syn23569719'))
+             dataFileHandleId = "syn23595214")
+prov <- Activity(used = c('syn11707420', 'syn11384571', 'syn11384608', 'syn3382527', 'syn3191087'))
 file <- synStore(file, activity=prov)
 
 file <- File("output/ADvariants_anno.txt",
@@ -589,7 +592,7 @@ file <- File("output/ADvariants_anno.txt",
              description = "LOAD variant list",
              parent = "syn23569714",
              dataFileHandleId = "syn23569715")
-prov <- Activity(executed = "syn23569718")
+prov <- Activity(executed = "syn23595214")
 file <- synStore(file, activity=prov)
 
 file <- File("output/ADvariants_genotypes_all.csv", 
@@ -597,15 +600,15 @@ file <- File("output/ADvariants_genotypes_all.csv",
              description = "LOAD variants all genotypes",
              parent = "syn23569714",
              dataFileHandleId = "syn23569716")
-prov <- Activity(executed = "syn23569718")
+prov <- Activity(executed = c("syn23595214", "syn23569719"))
 file <- synStore(file, activity=prov)
 
-file <- File("output/ADvariants_genotypes_all.csv", 
+file <- File("output/APOE_all.csv", 
              contentType = "text/csv",
              description = "APOE all genotypes",
              parent = "syn23569714",
              dataFileHandleId = "syn23569717")
-prov <- Activity(executed = "syn23569718")
+prov <- Activity(executed = c("syn23595214", "syn23569719"))
 file <- synStore(file, activity=prov)
 ```
 
