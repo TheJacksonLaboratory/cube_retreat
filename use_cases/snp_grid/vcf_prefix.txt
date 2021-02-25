@@ -1,6 +1,0 @@
-##reference=1000GenomesPilot-NCBI36
-##phasing=partial
-##INFO=<ID=PM,Number=1,Type=Float,Description="Percent Missing">
-##INFO=<ID=PI,Number=1,Type=Float,Description="Percent Imputed">
-##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
-##FORMAT=<ID=VA,Number=1,Type=String,Description="Value">
